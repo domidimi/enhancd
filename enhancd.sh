@@ -6,10 +6,6 @@
 #   this enhancd.sh supports bash and zsh only
 #
 
-export ENHANCD_DIR=${ENHANCD_DIR:-~/.enhancd}
-export ENHANCD_DISABLE_DOT=${ENHANCD_DISABLE_DOT:-0}
-export ENHANCD_DISABLE_HYPHEN=${ENHANCD_DISABLE_HYPHEN:-0}
-
 # __die puts a string to stderr
 __die() {
     echo "$1" 1>&2
@@ -30,15 +26,7 @@ __reverse() {
         cat <&0
     else
         cat "$1"
-    fi | awk '
-    {
-        line[NR] = $0
-    }
-    END {
-        for (i = NR; i > 0; i--) {
-            print line[i]
-        }
-    }' 2>/dev/null
+    fi | awk -f "$ENHANCD_ROOT/share/reverse.awk"
 }
 
 # __available narrows list down to one
@@ -85,14 +73,7 @@ __has() {
 # applies a configurable line numbering filter operation and writes the result to the standard output
 __nl() {
     # d in awk's argument is a delimiter
-    awk -v d="${1:-": "}" '
-    BEGIN {
-        i = 1
-    }
-    {
-        print i d $0
-        i++
-    }' 2>/dev/null
+    awk -v d="${1:-": "}" -f "$ENHANCD_ROOT/share/nl.awk"
 }
 
 # enhancd::get_dirstep returns a list of stepwise path
@@ -134,39 +115,7 @@ enhancd::split_path()
 {
     local arg
 
-    awk -v arg="${1:-$PWD}" '
-    # has_prefix tests whether the string s begins with pre.
-    function has_prefix(s, pre,        pre_len, s_len) {
-        pre_len = length(pre)
-        s_len   = length(s)
-
-        return pre_len <= s_len && substr(s, 1, pre_len) == pre
-    }
-
-    # isabs returns true if the path is absolute.
-    function isabs(pathname) {
-        return length(pathname) > 0 && has_prefix(pathname, "/")
-    }
-
-    BEGIN {
-        # check if arg is an valid path
-        if (!isabs(arg)) {
-            print "split_path requires an absolute path begins with a slash" >"/dev/stderr"
-            exit 1
-        }
-
-        # except for the beginning of the slash
-        s = substr(arg, 2)
-        num = split(s, arr, "/")
-
-        # display the beginning of the path
-        print substr(arg, 1, 1)
-
-        # decompose the path by a slash
-        for (i = 1; i < num; i++) {
-            print arr[i]
-        }
-    }'
+    awk -v arg="${1:-$PWD}" -f "$ENHANCD_ROOT/share/split_path.awk"
 }
 
 # enhancd::get_dirname returns the divided directory name with a slash
@@ -225,49 +174,7 @@ enhancd::get_abspath()
         fi
     else
         # If there are no duplicate directory name
-        awk -v cwd="$cwd" -v dir="$2" '
-        # erase erases the part of the path
-        function erase(str, pos) {
-            return substr(str, 1, pos-1)
-        }
-
-        # rindex returns the index of the last instance of find in string,
-        # or 0 if find is not present
-        function rindex(string, find, k, ns, nf) {
-            ns = length(string)
-            nf = length(find)
-            for (k = ns+1-nf; k >= 1; k--) {
-                if (substr(string, k, nf) == find) {
-                    if (k > 1 && substr(string, k-1, 1) == "/") {
-                        return k
-                    } else if (k == 1) {
-                        return k
-                    }
-                }
-            }
-            return 0
-        }
-
-        BEGIN {
-            # If dir is a slash, return a slash and exit
-            if (dir == "/") {
-                print "/"
-                exit
-            }
-
-            # pos is a position of dir in cwd
-            pos = rindex(cwd, dir)
-
-            # If it is not find the dir in the cwd, then exit
-            if (pos == 0) {
-                print cwd
-                exit
-            }
-
-            # convert the divided directory name to the absolute path
-            # that the directory name is contained
-            print erase(cwd, pos+length(dir))
-        }' 2>/dev/null
+        awk -v cwd="$cwd" -v dir="$2" -f "$ENHANCD_ROOT/share/get_abspath.awk"
     fi
 }
 
@@ -291,69 +198,7 @@ enhancd::fuzzy()
         return 1
     fi
 
-    awk -v search_string="$1" '
-    BEGIN {
-        FS = "/";
-    }
-
-    {
-        # calculates the degree of similarity
-        if ( (1 - leven_dist($NF, search_string) / (length($NF) + length(search_string))) * 100 >= 70 ) {
-            # When the degree of similarity of search_string is greater than or equal to 70%,
-            # to display the candidate path
-            print $0
-        }
-    }
-
-    # leven_dist returns the Levenshtein distance two text string
-    function leven_dist(a, b) {
-        lena = length(a);
-        lenb = length(b);
-
-        if (lena == 0) {
-            return lenb;
-        }
-        if (lenb == 0) {
-            return lena;
-        }
-
-        for (row = 1; row <= lena; row++) {
-            m[row,0] = row
-        }
-        for (col = 1; col <= lenb; col++) {
-            m[0,col] = col
-        }
-
-        for (row = 1; row <= lena; row++) {
-            ai = substr(a, row, 1)
-            for (col = 1; col <= lenb; col++) {
-                bi = substr(b, col, 1)
-                if (ai == bi) {
-                    cost = 0
-                } else {
-                    cost = 1
-                }
-                m[row,col] = min(m[row-1,col]+1, m[row,col-1]+1, m[row-1,col-1]+cost)
-            }
-        }
-
-        return m[lena,lenb]
-    }
-
-    # min returns the smaller of x, y or z
-    function min(a, b, c) {
-        result = a
-
-        if (b < result) {
-            result = b
-        }
-
-        if (c < result) {
-            result = c
-        }
-
-        return result
-    }' 2>/dev/null
+    awk -v search_string="$1" -f "$ENHANCD_ROOT/share/fuzzy.awk"
 }
 
 # enhancd::narrow returns result narrowed down by $1
@@ -658,9 +503,3 @@ enhancd::cd()
     # Add $PWD to the enhancd log
     enhancd::add
 }
-
-eval "alias ${ENHANCD_COMMAND:="cd"}=enhancd::cd"
-export ENHANCD_COMMAND
-if [ "$ENHANCD_COMMAND" != "cd" ]; then
-    unalias cd 2>/dev/null
-fi
