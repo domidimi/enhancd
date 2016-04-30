@@ -95,9 +95,9 @@ __nl() {
     }' 2>/dev/null
 }
 
-# cd::get_dirstep returns a list of stepwise path
-cd::get_dirstep() {
-    # cd::get_dirstep requires $1 that should be a path
+# enhancd::get_dirstep returns a list of stepwise path
+enhancd::get_dirstep() {
+    # enhancd::get_dirstep requires $1 that should be a path
     if __empty "$1"; then
         __die "too few arguments"
         return 1
@@ -119,8 +119,8 @@ cd::get_dirstep() {
     done
 }
 
-# cd::cat_log outputs the content of the log file or __empty line to stdin
-cd::cat_log()
+# enhancd::cat_log outputs the content of the log file or __empty line to stdin
+enhancd::cat_log()
 {
     if [ -s "$ENHANCD_DIR"/enhancd.log ]; then
         cat "$ENHANCD_DIR"/enhancd.log
@@ -129,8 +129,8 @@ cd::cat_log()
     fi
 }
 
-# cd::split_path decomposes the path with a slash as a delimiter
-cd::split_path()
+# enhancd::split_path decomposes the path with a slash as a delimiter
+enhancd::split_path()
 {
     local arg
 
@@ -169,8 +169,8 @@ cd::split_path()
     }'
 }
 
-# cd::get_dirname returns the divided directory name with a slash
-cd::get_dirname()
+# enhancd::get_dirname returns the divided directory name with a slash
+enhancd::get_dirname()
 {
     local is_uniq dir
 
@@ -179,22 +179,22 @@ cd::get_dirname()
 
     # uniq is the variable that checks whether there is
     # the duplicate directory in the PWD environment variable
-    is_uniq="$(cd::split_path "$dir" | sort | uniq -c | sort -nr | head -n 1 | awk '{print $1}')"
+    is_uniq="$(enhancd::split_path "$dir" | sort | uniq -c | sort -nr | head -n 1 | awk '{print $1}')"
 
     # Tests whether is_uniq is true or false
     if [ "$is_uniq" -eq 1 ]; then
         # is_uniq is true
-        cd::split_path "$dir"
+        enhancd::split_path "$dir"
     else
         # is_uniq is false
-        cd::split_path "$dir" | awk '{ printf("%d: %s\n", NR, $1); }'
+        enhancd::split_path "$dir" | awk '{ printf("%d: %s\n", NR, $1); }'
     fi
 }
 
-# cd::get_abspath regains the path from the divided directory name with a slash
-cd::get_abspath()
+# enhancd::get_abspath regains the path from the divided directory name with a slash
+enhancd::get_abspath()
 {
-    # cd::get_abspath requires two arguments
+    # enhancd::get_abspath requires two arguments
     if [ $# -lt 2 ]; then
         __die "too few arguments"
         return 1
@@ -221,7 +221,7 @@ cd::get_abspath()
             c=2
 
             # It is listed path stepwise
-            cd::get_dirstep "$1" | __reverse | __nl ":" | command grep "^$num" | cut -d: -f2
+            enhancd::get_dirstep "$1" | __reverse | __nl ":" | command grep "^$num" | cut -d: -f2
         fi
     else
         # If there are no duplicate directory name
@@ -271,20 +271,20 @@ cd::get_abspath()
     fi
 }
 
-# cd::list returns a directory list for changing directory of enhancd
-cd::list()
+# enhancd::list returns a directory list for changing directory of enhancd
+enhancd::list()
 {
     # if no argument is given, read stdin
     if [ -p /dev/stdin ]; then
         cat <&0
     else
-        cd::cat_log
+        enhancd::cat_log
     fi | __reverse | __unique
     #    ^- needs to be inverted before __unique
 }
 
-# cd::fuzzy returns a list of hits in the fuzzy search
-cd::fuzzy()
+# enhancd::fuzzy returns a list of hits in the fuzzy search
+enhancd::fuzzy()
 {
     if __empty "$1"; then
         __die "too few arguments"
@@ -356,8 +356,8 @@ cd::fuzzy()
     }' 2>/dev/null
 }
 
-# cd::narrow returns result narrowed down by $1
-cd::narrow()
+# enhancd::narrow returns result narrowed down by $1
+enhancd::narrow()
 {
     local stdin m
 
@@ -367,32 +367,32 @@ cd::narrow()
 
     # If m is __empty, do fuzzy-search; otherwise puts m
     if __empty "$m"; then
-        echo "$stdin" | cd::fuzzy "$1"
+        echo "$stdin" | enhancd::fuzzy "$1"
     else
         echo "$m"
     fi
 }
 
-# cd::enumrate returns a list that was decomposed with a slash 
+# enhancd::enumrate returns a list that was decomposed with a slash 
 # to the directory path that visited just before
 # e.g., /home/lisa/src/github.com
 # -> /home
 # -> /home/lisa
 # -> /home/lisa/src
 # -> /home/lisa/src/github.com
-cd::enumrate()
+enhancd::enumrate()
 {
     local dir
     dir="${1:-$PWD}"
 
-    cd::get_dirstep "$dir" | __reverse
+    enhancd::get_dirstep "$dir" | __reverse
     if [ -d "$dir" ]; then
         find "$dir" -maxdepth 1 -type d | command grep -v "\/\."
     fi
 }
 
-# cd::makelog carefully open/close the log
-cd::makelog()
+# enhancd::makelog carefully open/close the log
+enhancd::makelog()
 {
     if [ ! -d "$ENHANCD_DIR" ]; then
         mkdir -p "$ENHANCD_DIR"
@@ -410,7 +410,7 @@ cd::makelog()
     # $1 should be a function name
     # Run $1 process, and puts to the temporary file
     if __empty "$1"; then
-        cd::list | __reverse >"$esc"
+        enhancd::list | __reverse >"$esc"
     else
         $1 >"$esc"
     fi
@@ -430,8 +430,8 @@ cd::makelog()
     fi
 }
 
-# cd::refresh returns the result of removing a directory that does not exist from the log
-cd::refresh()
+# enhancd::refresh returns the result of removing a directory that does not exist from the log
+enhancd::refresh()
 {
     local line
 
@@ -442,16 +442,16 @@ cd::refresh()
     done <"$ENHANCD_DIR"/enhancd.log
 }
 
-# cd::assemble returns the assembled log
-cd::assemble()
+# enhancd::assemble returns the assembled log
+enhancd::assemble()
 {
-    cd::enumrate
-    cd::cat_log
+    enhancd::enumrate
+    enhancd::cat_log
     pwd
 }
 
-# cd::add adds a current working directory path to the log
-cd::add()
+# enhancd::add adds a current working directory path to the log
+enhancd::add()
 {
     # No overlaps and no underlaps in the log
     if [ ! -f "$ENHANCD_DIR"/enhancd.log -o "$(tail -n 1 "$ENHANCD_DIR"/enhancd.log)" = "$PWD" ]; then
@@ -461,10 +461,10 @@ cd::add()
     pwd >>"$ENHANCD_DIR"/enhancd.log
 }
 
-# cd::interface searches the directory that in the given list, 
+# enhancd::interface searches the directory that in the given list, 
 # and extracts with the filter if the list __has several paths, 
-# otherwise, call cd::builtin function
-cd::interface()
+# otherwise, call enhancd::builtin function
+enhancd::interface()
 {
     # Sets default values to ENHANCD_FILTER if it is __empty
     if __empty "$ENHANCD_FILTER"; then
@@ -485,7 +485,7 @@ cd::interface()
     fi
 
     # Check if options are specified
-    # If you pass a double-dot (..) as an argument to cd::interface
+    # If you pass a double-dot (..) as an argument to enhancd::interface
     if [ "$1" = ".." ]; then
         shift
         local flag_dot
@@ -499,9 +499,9 @@ cd::interface()
     local list
     list="$1"
 
-    # If no argument is given to cd::interface
+    # If no argument is given to enhancd::interface
     if __empty "$list"; then
-        __die "cd::interface requires an argument at least"
+        __die "enhancd::interface requires an argument at least"
         return 1
     fi
 
@@ -517,9 +517,9 @@ cd::interface()
             return 1
             ;;
         1 )
-            # If you pass a double-dot (..) as an argument to cd::interface
+            # If you pass a double-dot (..) as an argument to enhancd::interface
             if [ "$flag_dot" = "enable" ]; then
-                builtin cd "$(cd::get_abspath "$PWD" "$list")"
+                builtin cd "$(enhancd::get_abspath "$PWD" "$list")"
                 return $?
             fi
 
@@ -535,9 +535,9 @@ cd::interface()
             local t
             t="$(echo "$list" | eval "$filter")"
             if ! __empty "$t"; then
-                # If you pass a double-dot (..) as an argument to cd::interface
+                # If you pass a double-dot (..) as an argument to enhancd::interface
                 if [ "$flag_dot" = "enable" ]; then
-                    builtin cd "$(cd::get_abspath "$PWD" "$t")"
+                    builtin cd "$(enhancd::get_abspath "$PWD" "$t")"
                     return $?
                 fi
 
@@ -573,7 +573,7 @@ cd::interface()
 #     Exit Status:
 #     Returns 0 if the directory is changed; non-zero otherwise
 #
-cd::cd()
+enhancd::cd()
 {
     # In zsh it will cause field splitting to be performed
     # on unquoted parameter expansions.
@@ -599,14 +599,14 @@ cd::cd()
         fi
     fi
 
-    # t is an argument of the list for cd::interface
+    # t is an argument of the list for enhancd::interface
     local t
 
-    # First of all, this cd::makelog and cd::refresh function creates it
+    # First of all, this enhancd::makelog and enhancd::refresh function creates it
     # if the enhancd history file does not exist
-    cd::makelog
+    enhancd::makelog
     # Then, remove non existing directories from the history and refresh it
-    cd::makelog "cd::refresh"
+    enhancd::makelog "enhancd::refresh"
 
     # If a hyphen is passed as the argument,
     # searchs from the last 10 directory items in the log
@@ -615,8 +615,8 @@ cd::cd()
             builtin cd -
             return $?
         else
-            t="$(cd::list | command grep -v "^$PWD$" | head | cd::narrow "$2")"
-            cd::interface "${t:-$2}"
+            t="$(enhancd::list | command grep -v "^$PWD$" | head | enhancd::narrow "$2")"
+            enhancd::interface "${t:-$2}"
             return $?
         fi
     fi
@@ -626,40 +626,40 @@ cd::cd()
     # In short, you can jump back to a specific directory,
     # without doing `cd ../../..`
     if [ "$1" = ".." ] && [ "$ENHANCD_DISABLE_DOT" -eq 0 ]; then
-        t="$(cd::get_dirname "$PWD" | __reverse | command grep "$2")"
-        cd::interface ".." "${t:-$2}"
+        t="$(enhancd::get_dirname "$PWD" | __reverse | command grep "$2")"
+        enhancd::interface ".." "${t:-$2}"
         return $?
     fi
 
     # Process a regular argument
     # If a given argument is a directory that exists already,
-    # call builtin cd function; cd::interface otherwise
+    # call builtin cd function; enhancd::interface otherwise
     if [ -d "$1" ]; then
         builtin cd "$1"
     else
         # If no argument is given, imitate builtin cd command and rearrange
         # the history so that the HOME environment variable could be latest
         if __empty "$1"; then
-            t="$({ cd::cat_log; echo "$HOME"; } | cd::list)"
+            t="$({ enhancd::cat_log; echo "$HOME"; } | enhancd::list)"
         else
-            t="$(cd::list | cd::narrow "$1")"
+            t="$(enhancd::list | enhancd::narrow "$1")"
         fi
 
         # trim PWD
         t="$(echo "$t" | command grep -v "^$PWD$")"
 
-        # If the t is __empty, pass $1 to cd::interface instead of the t
-        cd::interface "${t:-$1}"
+        # If the t is __empty, pass $1 to enhancd::interface instead of the t
+        enhancd::interface "${t:-$1}"
     fi
 
     # Finally, assemble the cd history
-    cd::makelog "cd::assemble"
+    enhancd::makelog "enhancd::assemble"
 
     # Add $PWD to the enhancd log
-    cd::add
+    enhancd::add
 }
 
-eval "alias ${ENHANCD_COMMAND:="cd"}=cd::cd"
+eval "alias ${ENHANCD_COMMAND:="cd"}=enhancd::cd"
 export ENHANCD_COMMAND
 if [ "$ENHANCD_COMMAND" != "cd" ]; then
     unalias cd 2>/dev/null

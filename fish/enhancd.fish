@@ -25,11 +25,11 @@ function unique
     end | awk '!a[$0]++' 2>/dev/null
 end
 
-function cd::add --on-variable PWD
+function enhancd::add --on-variable PWD
     pwd >>"$ENHANCD_LOG"
 end
 
-function cd::cat_log
+function enhancd::cat_log
     if test -s "$ENHANCD_LOG"
         cat "$ENHANCD_LOG"
     else
@@ -37,19 +37,19 @@ function cd::cat_log
     end
 end
 
-function cd::list
+function enhancd::list
     if not tty >/dev/null
         cat <&0
     else
-        cd::cat_log
+        enhancd::cat_log
     end | reverse | unique
 end
 
-function cd::narrow
-    cat <&0 | cd::fuzzy "$argv[1]"
+function enhancd::narrow
+    cat <&0 | enhancd::fuzzy "$argv[1]"
 end
 
-function cd::fuzzy
+function enhancd::fuzzy
     if test -z "$argv[1]"
         echo "too few arguments" 1>&2
         return 1
@@ -120,7 +120,7 @@ function cd::fuzzy
     }' 2>/dev/null
 end
 
-function cd::interface
+function enhancd::interface
     set -l filter "fzf"
 
     switch (count $argv)
@@ -150,7 +150,7 @@ function cd::interface
     end
 end
 
-function cd::cd
+function enhancd::cd
     if not tty >/dev/null
         set -l stdin
         read stdin
@@ -167,14 +167,14 @@ function cd::cd
         builtin cd "$argv[1]"
     else
         if test -z "$argv[1]"
-            set t (begin; cd::cat_log; echo "$HOME"; end | cd::list)
+            set t (begin; enhancd::cat_log; echo "$HOME"; end | enhancd::list)
         else
-            set t (cd::list | cd::narrow "$argv[1]")
+            set t (enhancd::list | enhancd::narrow "$argv[1]")
         end
 
         if test -z "$t"
             set t $argv[1]
         end
-        cd::interface $t
+        enhancd::interface $t
     end
 end

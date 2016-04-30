@@ -63,7 +63,7 @@ describe "enhancd"
   end
 
   describe "cd function"
-    it "cd::get_dirstep"
+    it "enhancd::get_dirstep"
       expect="$(cat <<EOF
 /home/lisa/work/dir/someA
 /home/lisa/work/dir
@@ -73,11 +73,11 @@ describe "enhancd"
 /
 EOF
 )"
-      actual="$(cd::get_dirstep /home/lisa/work/dir/someA)"
+      actual="$(enhancd::get_dirstep /home/lisa/work/dir/someA)"
       assert equal "$expect" "$actual"
     end
 
-    it "cd::split_path"
+    it "enhancd::split_path"
       expect="$(cat <<EOF
 /
 home
@@ -86,11 +86,11 @@ work
 dir
 EOF
 )"
-      actual="$(cd::split_path /home/lisa/work/dir/someA)"
+      actual="$(enhancd::split_path /home/lisa/work/dir/someA)"
       assert equal "$expect" "$actual"
     end
 
-    it "cd::get_dirname"
+    it "enhancd::get_dirname"
       expect="$(cat <<EOF
 /
 home
@@ -99,25 +99,25 @@ work
 dir
 EOF
 )"
-      actual="$(cd::get_dirname /home/lisa/work/dir/someA)"
+      actual="$(enhancd::get_dirname /home/lisa/work/dir/someA)"
       assert equal "$expect" "$actual"
     end
 
-    it "cd::get_abspath"
+    it "enhancd::get_abspath"
     end
 
-    it "cd::list"
+    it "enhancd::list"
       expect="$(cat <<EOF
 ccc
 aaa
 bbb
 EOF
 )"
-      actual="$(echo "$test_text" | cd::list)"
+      actual="$(echo "$test_text" | enhancd::list)"
       assert equal "$expect" "$actual"
     end
 
-    it "cd::fuzzy"
+    it "enhancd::fuzzy"
       text="$(cat <<EOF
 /home/lisa/work/dir/test
 /home/lisa/work/dir/abcd
@@ -125,11 +125,11 @@ EOF
 EOF
 )"
       expect="/home/lisa/work/dir/test"
-      actual="$(echo "$text" | cd::fuzzy post)"
+      actual="$(echo "$text" | enhancd::fuzzy post)"
       assert equal "$expect" "$actual"
     end
 
-    it "cd::narrow"
+    it "enhancd::narrow"
       text="$(cat <<EOF
 /home/lisa/work/dir/test
 /home/lisa/work/dir/abcd
@@ -137,11 +137,11 @@ EOF
 EOF
 )"
       expect="/home/lisa/work/dir/abcd"
-      actual="$(echo "$text" | cd::narrow a)"
+      actual="$(echo "$text" | enhancd::narrow a)"
       assert equal "$expect" "$actual"
     end
 
-    it "cd::narrow (ignore case)"
+    it "enhancd::narrow (ignore case)"
       text="$(cat <<EOF
 /home/lisa/work/dir/test
 /home/lisa/work/dir/Abcd
@@ -149,11 +149,11 @@ EOF
 EOF
 )"
       expect="/home/lisa/work/dir/Abcd"
-      actual="$(echo "$text" | cd::narrow a)"
+      actual="$(echo "$text" | enhancd::narrow a)"
       assert equal "$expect" "$actual"
     end
 
-    it "cd::enumrate"
+    it "enhancd::enumrate"
       expect="$(cat <<EOF
 /
 /home
@@ -162,11 +162,11 @@ EOF
 /home/lisa/src/github.com
 EOF
 )"
-      actual="$(cd::enumrate /home/lisa/src/github.com)"
+      actual="$(enhancd::enumrate /home/lisa/src/github.com)"
       assert equal "$expect" "$actual"
     end
 
-    it "cd::interface"
+    it "enhancd::interface"
       # before
       list="$(cat <<EOF
 $HOME/enhancd_testA
@@ -179,14 +179,14 @@ EOF
 
       # test
       expect="$HOME/enhancd_testA"
-      actual="$(cd::interface "$list" && pwd)"
+      actual="$(enhancd::interface "$list" && pwd)"
       assert equal "$expect" "$actual"
 
       # after
       rmdir ~/enhancd_test{A,B}
     end
 
-    it "cd::interface .."
+    it "enhancd::interface .."
       # before
       list="$(cat <<EOF
 a
@@ -201,7 +201,7 @@ EOF
 
       # test
       expect="$HOME/enhancd_test/a/b"
-      actual="$(cd::interface ".." "$list" && pwd)"
+      actual="$(enhancd::interface ".." "$list" && pwd)"
       assert equal "$expect" "$actual"
 
       # after
@@ -209,7 +209,7 @@ EOF
     end
 
 
-    it "cd::interface .. w/ dup"
+    it "enhancd::interface .. w/ dup"
       # before
       list="$(cat <<EOF
 a
@@ -224,7 +224,7 @@ EOF
 
       # test
       expect="$HOME/enhancd_test/a/b/c"
-      actual="$(cd::interface ".." "$list" && pwd)"
+      actual="$(enhancd::interface ".." "$list" && pwd)"
       assert equal "$expect" "$actual"
 
       # after
