@@ -6,7 +6,7 @@ fzf() { :; }
 true=0
 false=1
 
-. ./enhancd.sh || exit 1
+. ./init.sh || exit 1
 
 test_text="$(cat <<EOF
 aaa
